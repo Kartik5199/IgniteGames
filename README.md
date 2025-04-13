@@ -106,7 +106,7 @@ Follow the steps below to set up the project locally:
 
 ## Screenshots
 
-### 1. **Checkout Page**
+### 1. **Main Page**
    ![home page Screenshot](login.png)
 
 ### 2. **Catalog Page**
