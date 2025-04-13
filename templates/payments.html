@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Payment - IgniteGames</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+</head>
+<body class="bg-gray-900 text-white px-6 py-10">
+
+  <a href="/catalog" class="absolute top-6 left-6 text-white text-lg font-semibold hover:underline flex items-center space-x-2">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+    </svg>
+    <span>Back</span>
+  </a>
+
+  <h1 class="text-4xl font-bold mb-6 text-center">Confirm Payment</h1>
+  <div id="cart-summary" class="mb-8"></div>
+
+  <div class="text-center">
+    <button class="bg-green-500 text-white px-6 py-2 rounded hover:bg-green-600" id="pay-btn">Pay Now</button>
+  </div>
+
+  <script>
+    const cart = JSON.parse(localStorage.getItem("cart_for_payment") || "[]");
+    const summaryDiv = document.getElementById("cart-summary");
+    let totalAmount = 0;
+
+    async function displayCartSummary() {
+      const res = await fetch("/products/all");
+      const data = await res.json();
+      const products = data.products;
+      summaryDiv.innerHTML = "";
+
+      cart.forEach(item => {
+        const product = products.find(p => p._id === item.id);
+        if (product) {
+          const subtotal = product.price * item.quantity;
+          totalAmount += subtotal;
+          summaryDiv.innerHTML += `
+            <div class="bg-gray-800 p-4 rounded mb-4">
+              <h2 class="text-xl font-bold">${product.name}</h2>
+              <p>${product.description}</p>
+              <p>Quantity: ${item.quantity}</p>
+              <p class="text-green-400">Subtotal: ₹${subtotal}</p>
+            </div>
+          `;
+        }
+      });
+
+      summaryDiv.innerHTML += `<div class="text-right text-xl font-bold mt-4">Total: ₹${totalAmount}</div>`;
+    }
+
+    async function initiatePayment() {
+      const token = localStorage.getItem("token");
+      const response = await fetch("/create/order", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ amount: totalAmount }) 
+      });
+
+      const data = await response.json();
+
+      const options = {
+        key: "{{ razorpay_key_id }}",
+        amount: data.amount,
+        currency: data.currency,
+        name: "IgniteGames",
+        description: "Game Purchase",
+        image: "/static/images/logo.jpg",
+        order_id: data.order_id,
+        handler: async function (response) {
+          for (const item of cart) {
+            await fetch("/payment/success", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`
+              },
+              body: JSON.stringify({
+                product_id: item.id,
+                quantity: item.quantity,
+                payment_id: response.razorpay_payment_id,
+                order_id: response.razorpay_order_id
+              })
+            });
+          }
+
+          alert("✅ Payment Successful!");
+          localStorage.removeItem("cart");
+          localStorage.removeItem("cart_for_payment");
+
+          const productId = cart[0].id;
+          console.log("Redirecting to:", `/download/${productId}`);
+          window.location.href = `/download/${productId}`;
+        },
+        prefill: {
+          name: "Demo User",
+          email: "demo@example.com"
+        },
+        theme: {
+          color: "#121212"
+        }
+      };
+
+      const rzp = new Razorpay(options);
+      rzp.open();
+    }
+
+    document.getElementById("pay-btn").addEventListener("click", initiatePayment);
+    displayCartSummary();
+  </script>
+</body>
+</html>

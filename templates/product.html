@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    
+    <title>Product - IgniteGames</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}" defer></script>
+</head>
+<body class="bg-gray-900 text-white min-h-screen">
+
+    <!-- Navbar -->
+    <nav class="flex items-center justify-between px-6 py-4 bg-gray-800 shadow-md sticky top-0 z-50">
+        <h1 class="text-3xl font-extrabold text-green-400">IgniteGames</h1>
+        <a href="/catalog" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded transition duration-200">
+            ← Back to Catalog
+        </a>
+    </nav>
+
+    <!-- Product Section -->
+    <section class="max-w-6xl mx-auto px-4 py-12">
+        <div id="product-details" class="flex flex-col md:flex-row items-center gap-10"></div>
+    </section>
+
+    <script>
+        if (!localStorage.getItem("token")) {
+            window.location.href = "/";
+        }
+
+        async function fetchProduct() {
+            const params = new URLSearchParams(window.location.search);
+            const productId = params.get('id');
+            const res = await fetch(`/products/all`);
+            const data = await res.json();
+            const product = data.products.find(p => p._id === productId);
+
+            if (product) {
+                document.getElementById('product-details').innerHTML = `
+                    <img src="${product.full_image_url}" alt="${product.name}" class="w-full md:w-1/2 h-auto rounded-lg shadow-lg object-contain bg-black p-4" />
+                    <div class="text-center md:text-left max-w-xl">
+                        <h2 class="text-4xl font-bold mb-4 text-white">${product.name}</h2>
+                        <p class="text-gray-300 mb-6">${product.description}</p>
+                        <p class="text-green-400 text-2xl font-semibold mb-6">$${product.price}</p>
+                        <button onclick="addToCart('${product._id}')" class="bg-yellow-500 hover:bg-yellow-600 text-black font-semibold py-3 px-6 rounded-lg shadow-lg transition duration-200">
+                            Add to Cart
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        function addToCart(productId) {
+            let cart = JSON.parse(localStorage.getItem("cart")) || [];
+
+            const existingItemIndex = cart.findIndex(item => item.id === productId);
+
+            if (existingItemIndex !== -1) {
+                cart[existingItemIndex].quantity += 1;
+            } else {
+                cart.push({ id: productId, quantity: 1 });
+            }
+
+            localStorage.setItem("cart", JSON.stringify(cart));
+            alert("Product added to cart!");
+        }
+
+        fetchProduct();
+    </script>
+</body>
+</html>

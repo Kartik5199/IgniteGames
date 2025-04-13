@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Login - IgniteGames</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+    <!-- Tailwind CSS & Font Awesome -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <script src="{{ url_for('static', filename='js/app.js') }}" defer></script>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .glow-text {
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        .btn-glow {
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-glow:hover {
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.4);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-gray-950 via-gray-900 to-gray-800 text-white min-h-screen flex items-center justify-center px-4">
+
+    <div class="w-full max-w-md p-8 bg-gray-800 rounded-xl shadow-2xl border border-gray-700">
+        
+        <!-- Logo above Sign In -->
+        <div class="flex justify-center mb-6">
+            <img src="{{ url_for('static', filename='images/logo.jpg') }}" alt="Logo" class="w-16 h-16 rounded-full border-2 border-white shadow-md object-cover" />
+        </div>
+
+        <!-- Title -->
+        <h2 class="text-3xl font-bold text-center text-white glow-text mb-6">Sign In</h2>
+
+        <!-- Form -->
+        <form id="loginForm" class="space-y-5">
+            <!-- Email -->
+            <div>
+                <label for="email" class="block mb-2 text-lg font-semibold text-gray-300">Email</label>
+                <input
+                    type="email"
+                    id="email"
+                    placeholder="Enter your email"
+                    required
+                    class="w-full px-4 py-2 rounded bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-white"
+                >
+            </div>
+
+            <!-- Password -->
+            <div>
+                <label for="password" class="block mb-2 text-lg font-semibold text-gray-300">Password</label>
+                <div class="relative">
+                    <input
+                        type="password"
+                        id="password"
+                        placeholder="Enter your password"
+                        required
+                        class="w-full px-4 py-2 rounded bg-gray-700 text-white pr-10 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-white"
+                    >
+                    <button type="button" onclick="toggleVisibility('password', this)" 
+                        class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white">
+                        <i class="fa-solid fa-eye"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Submit -->
+            <button type="submit" class="w-full py-2 bg-white text-black font-semibold rounded btn-glow transition duration-200">
+                Login
+            </button>
+        </form>
+
+        <!-- Error Message -->
+        <p id="errorMsg" class="mt-4 text-center text-red-500 hidden"></p>
+
+        <!-- Register Prompt -->
+        <p class="mt-6 text-center text-sm text-gray-400">
+            Don't have an account?
+            <a href="/register" class="text-white underline hover:text-green-400 transition duration-200 glow-text">
+                Register here
+            </a>
+        </p>
+
+</div>
+    </div>
+
+    <script>
+        // Login logic
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const errorMsg = document.getElementById('errorMsg');
+            errorMsg.classList.add('hidden');
+
+            try {
+                const response = await fetch('/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    localStorage.setItem('token', data.token);
+                    window.location.href = "/catalog";
+                } else {
+                    errorMsg.textContent = data.message || "Invalid credentials.";
+                    errorMsg.classList.remove('hidden');
+                }
+            } catch (err) {
+                errorMsg.textContent = "Something went wrong. Please try again.";
+                errorMsg.classList.remove('hidden');
+            }
+        });
+
+        // Toggle password visibility
+        function toggleVisibility(fieldId, btn) {
+            const input = document.getElementById(fieldId);
+            const icon = btn.querySelector('i');
+
+            if (input.type === "password") {
+                input.type = "text";
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = "password";
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+    </script>
+</body>
+</html>

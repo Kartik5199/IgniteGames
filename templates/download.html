@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Download - IgniteGames</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-white flex flex-col items-center justify-center min-h-screen">
+
+    <a href="/catalog" class="absolute top-6 left-6 text-white text-lg font-semibold hover:underline flex items-center space-x-2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+        <span>Back</span>
+    </a>
+    
+    <div class="text-center">
+        <h1 class="text-3xl font-bold mb-4">Download Ready!</h1>
+        <p class="text-lg mb-6">Thank you for purchasing <strong>{{ product.name }}</strong>.</p>
+        <button 
+            onclick="handleFakeDownload()" 
+            class="bg-blue-500 px-6 py-2 rounded hover:bg-blue-600 text-white">
+            ⬇ Download Game
+        </button>
+    </div>
+</body>
+<script>
+    function handleFakeDownload() {
+      alert("✅ Download Successful!");
+    }
+  </script>
+</html>

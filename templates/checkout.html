@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout - IgniteGames</title>
+
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}" defer></script>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+</head>
+<body class="bg-gray-900 text-white">
+    <nav class="navbar flex justify-between items-center p-4 bg-gray-800">
+        <h1 class="text-3xl font-bold">IgniteGames</h1>
+        <a href="/catalog" class="btn bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Back to Catalog</a>
+    </nav>
+
+    <div class="container mx-auto mt-10 px-4">
+        <h2 class="text-4xl font-bold text-center mb-6">Your Cart</h2>
+        <div id="cart-items" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+
+        <div class="text-center mt-6">
+            <button class="bg-green-500 text-white px-6 py-2 rounded hover:bg-green-600" onclick="placeOrder()">Place Order</button>
+        </div>
+    </div>
+
+    <script>
+        if (!localStorage.getItem("token")) {
+            window.location.href = "/";
+        }
+
+        async function displayCart() {
+            const cart = JSON.parse(localStorage.getItem("cart") || "[]");
+            const cartDiv = document.getElementById("cart-items");
+
+            if (cart.length === 0) {
+                cartDiv.innerHTML = "<p class='text-center text-gray-400'>Your cart is empty.</p>";
+                return;
+            }
+
+            cartDiv.innerHTML = "";
+
+            for (const item of cart) {
+                const res = await fetch(`/products/all`);
+                const data = await res.json();
+                const product = data.products.find(p => p._id === item.id);
+
+                if (product) {
+                    cartDiv.innerHTML += `
+                        <div class="bg-gray-800 rounded shadow-lg mb-6 mx-auto max-w-sm overflow-hidden">
+                            <img src="${product.image_url}" alt="${product.name}" class="w-full h-auto object-cover rounded-t">
+                            <div class="p-4">
+                                <h3 class="text-xl font-bold mb-1">${product.name}</h3>
+                                <p class="text-gray-400 text-sm mb-2">${product.description}</p>
+                                <p class="text-green-400 font-semibold">Price: ₹${product.price}</p>
+                                <p class="text-sm text-gray-300">Quantity: ${item.quantity}</p>
+                                <button class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 mt-2" onclick="removeItem('${item.id}')">Remove</button>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    cartDiv.innerHTML += `<p class="text-red-400">Product not found for ID: ${item.id}</p>`;
+                }
+            }
+        }
+
+        async function placeOrder() {
+            const token = localStorage.getItem("token");
+            if (!token) {
+                alert("You must be logged in to place an order!");
+                return;
+            }
+
+            const cart = JSON.parse(localStorage.getItem("cart") || "[]");
+            if (cart.length === 0) {
+                alert("Your cart is empty!");
+                return;
+            }
+
+            for (const item of cart) {
+                try {
+                    const res = await fetch("/orders/place", {
+                        method: "POST",
+                        headers: {
+                            "Authorization": `Bearer ${token}`,
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({ product_id: item.id, quantity: item.quantity })
+                    });
+
+                    if (res.status === 401) {
+                        alert("Your session has expired. Please log in again.");
+                        localStorage.removeItem("token");
+                        window.location.href = "/";
+                        return;
+                    }
+
+                    if (!res.ok) {
+                        const errorData = await res.json();
+                        alert(`Failed to place order for product ${item.id}. Reason: ${errorData.message || 'Unknown error'}`);
+                        return;
+                    }
+
+                } catch (error) {
+                    console.error("Network or server error:", error);
+                    alert("Something went wrong while placing the order.");
+                    return;
+                }
+            }
+            
+            // Save cart to localStorage for payments.html
+            localStorage.setItem("cart_for_payment", JSON.stringify(cart));
+
+            // Clear the original cart
+            localStorage.removeItem("cart");
+
+            // Redirect to /payments
+            window.location.href = "/payments";
+        }
+
+        function removeItem(productId) {
+            let cart = JSON.parse(localStorage.getItem("cart") || "[]");
+
+            // Remove the item from the cart array
+            cart = cart.filter(item => item.id !== productId);
+
+            // Save updated cart to localStorage
+            localStorage.setItem("cart", JSON.stringify(cart));
+
+            // Re-render the cart
+            displayCart();
+        }
+
+        displayCart();
+    </script>
+</body>
+</html>

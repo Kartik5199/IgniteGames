@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+
+    <title>Catalog - IgniteGames</title>
+
+    <!-- Tailwind & Font -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet" />
+    <script src="{{ url_for('static', filename='js/app.js') }}" defer></script>
+
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .glow-text {
+            text-shadow: 0 0 8px rgba(34, 197, 94, 0.6);
+        }
+
+        .btn-glow {
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-glow:hover {
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+        }
+
+        .fade-in {
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+        }
+
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        #carousel {
+            transition: transform 0.9s cubic-bezier(0.25, 0.1, 0.25, 1);
+        }
+
+        #carousel > div {
+            transition: transform 0.6s ease-in-out;
+            flex-shrink: 0;
+            width: 100%;
+        }
+
+        .carousel-slide {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        .carousel-img {
+            object-fit: cover;
+            width: 100%;
+            height: 100%;
+        }
+
+        .carousel-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.9));
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 2rem;
+            color: white;
+        }
+
+        .carousel-overlay h3 {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .carousel-overlay p.description {
+            font-size: 0.9rem;
+            max-height: 4rem;
+            overflow-y: auto;
+            margin-bottom: 1rem;
+            color: #ccc;
+        }
+
+        .carousel-overlay p.price {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: #34d399;
+            margin-bottom: 1rem;
+        }
+
+        .carousel-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .carousel-buttons a,
+        .carousel-buttons button {
+            flex: 1;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            font-weight: 600;
+            text-align: center;
+            transition: all 0.2s ease;
+        }
+
+        .carousel-buttons a:hover,
+        .carousel-buttons button:hover {
+            filter: brightness(1.1);
+            box-shadow: 0 0 10px rgba(255,255,255,0.2);
+        }
+    </style>
+</head>
+
+<body class="bg-gradient-to-br from-gray-950 via-gray-900 to-gray-800 text-white min-h-screen scroll-smooth">
+
+    <!-- Navbar -->
+    <nav class="flex items-center justify-between px-6 py-4 bg-gray-800 shadow-md sticky top-0 z-50">
+        <div class="flex items-center gap-3">
+            <img src="{{ url_for('static', filename='images/logo.jpg') }}" alt="Logo" class="w-10 h-10 rounded-full border-2 border-white object-cover" />
+            <h1 class="text-3xl font-extrabold glow-text text-white">IgniteGames</h1>
+        </div>
+        <div class="flex items-center gap-4">
+            <a href="/checkout" class="bg-white text-black font-semibold py-2 px-4 rounded btn-glow transition duration-200 hover:shadow-white hover:brightness-110">
+                View Cart
+            </a>
+            <button onclick="logout()" class="bg-white text-black font-semibold py-2 px-4 rounded btn-glow transition duration-200 hover:shadow-white hover:brightness-110">
+                Logout
+            </button>
+            <!-- Hamburger Menu -->
+            <div class="relative group">
+                <button class="text-white text-3xl font-bold focus:outline-none px-2" id="menu-btn">
+                    &#9776;
+                </button>
+
+                <!-- Dropdown Menu -->
+                <div id="dropdown-menu"
+                    class="absolute right-0 mt-2 w-48 bg-gray-900 rounded shadow-lg py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
+                    <a href="/profile" class="block px-4 py-2 text-white hover:bg-gray-700">Profile</a>
+                    <a href="/contact" class="block px-4 py-2 text-white hover:bg-gray-700">Contact Us</a>
+                    <a href="/docs" class="block px-4 py-2 text-white hover:bg-gray-700">Documentation</a>
+                </div>
+            </div>
+
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-6 py-10">
+        <!-- Featured Carousel -->
+        <div id="carousel-container" class="relative w-full overflow-hidden rounded-lg mb-10 h-[32rem]">
+            <div id="carousel" class="flex transition-transform duration-700 ease-in-out h-full">
+                <!-- Slides will be injected here -->
+            </div>
+            <button onclick="prevSlide()" class="absolute top-1/2 left-4 transform -translate-y-1/2 bg-gray-700 bg-opacity-50 hover:bg-opacity-80 text-white px-3 py-1 rounded-full z-10">
+                ‹
+            </button>
+            <button onclick="nextSlide()" class="absolute top-1/2 right-4 transform -translate-y-1/2 bg-gray-700 bg-opacity-50 hover:bg-opacity-80 text-white px-3 py-1 rounded-full z-10">
+                ›
+            </button>
+        </div>
+
+        <!-- Product Grid -->
+        <div id="products" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8"></div>
+    </main>
+
+<script>
+    window.addEventListener('pageshow', function (event) {
+        if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
+            if (!localStorage.getItem("token")) {
+                window.location.href = "/";
+            }
+        }
+    });
+
+    if (!localStorage.getItem("token")) {
+        window.location.href = "/";
+    }
+
+    let featuredGames = [];
+    let currentIndex = 0;
+    let autoSlideInterval;
+
+    async function fetchProducts() {
+        const res = await fetch('/products/all');
+        const data = await res.json();
+        featuredGames = data.products.slice(0, 7);
+        renderCarousel();
+        setTimeout(() => {
+            renderCatalog(data.products);
+            revealOnScroll();
+        }, 100);
+    }
+
+    function renderCarousel() {
+        const carousel = document.getElementById('carousel');
+        carousel.innerHTML = '';
+        featuredGames.forEach(game => {
+            const slide = document.createElement('div');
+            slide.className = 'carousel-slide';
+
+            slide.innerHTML = `
+                <img src="${game.full_image_url}" alt="${game.name}" class="carousel-img" />
+                <div class="carousel-overlay">
+                    <h3>${game.name}</h3>
+                    <p class="description">${game.description}</p>
+                    <p class="price">₹${game.price}</p>
+                    <div class="carousel-buttons">
+                        <a href="/product?id=${game._id}" onclick="event.stopPropagation()" class="bg-white text-black font-semibold py-2 px-4 rounded btn-glow transition duration-200 hover:shadow-white hover:brightness-110">
+                            View
+                        </a>
+                        <button onclick="addToCart('${game._id}')" class="bg-white text-black font-semibold py-2 px-4 rounded btn-glow transition duration-200 hover:shadow-white hover:brightness-110">
+                            Add to Cart
+                        </button>
+                    </div>
+                </div>
+            `;
+            carousel.appendChild(slide);
+        });
+        startAutoSlide();
+    }
+
+    function startAutoSlide() {
+        clearInterval(autoSlideInterval);
+        autoSlideInterval = setInterval(() => {
+            nextSlide();
+        }, 4000);
+    }
+
+    function nextSlide() {
+        currentIndex = (currentIndex + 1) % featuredGames.length;
+        updateCarousel();
+    }
+
+    function prevSlide() {
+        currentIndex = (currentIndex - 1 + featuredGames.length) % featuredGames.length;
+        updateCarousel();
+    }
+
+    function updateCarousel() {
+        const carousel = document.getElementById('carousel');
+        const targetX = -currentIndex * 100;
+        let start = null;
+        const duration = 500;
+        const startX = parseFloat(carousel.style.transform.replace('translateX(', '').replace('%)', '')) || 0;
+
+        function step(timestamp) {
+            if (!start) start = timestamp;
+            const progress = timestamp - start;
+            const easing = progress / duration;
+            const eased = easeInOutCubic(Math.min(easing, 1));
+            const current = startX + (targetX - startX) * eased;
+            carousel.style.transform = `translateX(${current}%)`;
+
+            if (progress < duration) {
+                requestAnimationFrame(step);
+            } else {
+                carousel.style.transform = `translateX(${targetX}%)`;
+            }
+        }
+
+        requestAnimationFrame(step);
+    }
+
+    function easeInOutCubic(t) {
+        return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    }
+
+    function renderCatalog(products) {
+        const productsDiv = document.getElementById('products');
+        products.forEach((product) => {
+            const productCard = document.createElement('div');
+            productCard.className = `bg-gray-800 rounded-lg overflow-hidden shadow-md transform hover:scale-105 hover:shadow-green-400/50 hover:brightness-110 transition-all duration-300 fade-in`;
+            productCard.innerHTML = `
+                <img src="${product.image_url}" alt="${product.name}" class="w-full h-64 object-cover">
+                <div class="p-4">
+                    <h3 class="text-xl font-bold mb-1">${product.name}</h3>
+                    <p class="text-gray-400 text-sm h-16 overflow-hidden">${product.description}</p>
+                    <p class="text-green-400 font-semibold mt-2">₹${product.price}</p>
+                    <div class="flex gap-2 mt-4">
+                        <a href="/product?id=${product._id}" class="bg-white text-black font-semibold py-2 px-4 rounded btn-glow transition duration-200 hover:shadow-white hover:brightness-110">
+                            View
+                        </a>
+                        <button onclick="addToCart('${product._id}')" class="bg-white text-black font-semibold py-2 px-4 rounded btn-glow transition duration-200 hover:shadow-white hover:brightness-110">
+                            Add to Cart
+                        </button>
+                    </div>
+                </div>
+            `;
+            productsDiv.appendChild(productCard);
+        });
+    }
+
+    function addToCart(productId) {
+        let cart = JSON.parse(localStorage.getItem("cart")) || [];
+        const existingItemIndex = cart.findIndex(item => item.id === productId);
+        if (existingItemIndex !== -1) {
+            cart[existingItemIndex].quantity += 1;
+        } else {
+            cart.push({ id: productId, quantity: 1 });
+        }
+        localStorage.setItem("cart", JSON.stringify(cart));
+        alert("Product added to cart!");
+    }
+
+    function logout() {
+        localStorage.removeItem("token");
+        localStorage.removeItem("cart");
+        window.location.href = "/";
+    }
+
+    function revealOnScroll() {
+        const elements = document.querySelectorAll(".fade-in");
+        const observer = new IntersectionObserver(entries => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add("visible");
+                }
+            });
+        }, { threshold: 0.1 });
+
+        elements.forEach(el => observer.observe(el));
+    }
+
+    fetchProducts();
+
+        document.getElementById("menu-btn").addEventListener("click", function (e) {
+        const menu = document.getElementById("dropdown-menu");
+        menu.classList.toggle("invisible");
+        menu.classList.toggle("opacity-0");
+        menu.classList.toggle("opacity-100");
+        menu.classList.toggle("visible");
+    });
+
+</script>
+</body>
+</html>
