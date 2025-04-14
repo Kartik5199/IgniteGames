@@ -350,5 +350,7 @@ def update_profile():
 app.register_blueprint(routes_bp)
 
 if __name__ == '__main__':
-    print("🚀 Starting Flask server on http://127.0.0.1:5000")
-    app.run(debug=True)
+    port = int(os.environ.get('PORT', 5000))
+    print(f"🚀 Starting Flask server on http://0.0.0.0:{port}")
+    app.run(host='0.0.0.0', port=port)
+
